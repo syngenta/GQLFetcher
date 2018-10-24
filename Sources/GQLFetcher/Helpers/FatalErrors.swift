@@ -1,4 +1,6 @@
 import Foundation
+
+#if os(macOS)
 import XCTest
 
 extension XCTestCase {
@@ -60,3 +62,5 @@ struct FatalErrorUtil {
         fatalErrorClosure = defaultFatalErrorClosure
     }
 }
+
+#endif

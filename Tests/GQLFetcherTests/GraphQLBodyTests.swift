@@ -42,16 +42,20 @@ class GraphQLBodyTests: XCTestCase {
     }
     
     func testBrokenInit() {
+        #if os(macOS)
         expectFatalError(expectedMessage: "'operations' must containes 1 and more operations") {
             let array : [GraphQLQuery] = []
             _ = GraphQLBody(operations: array)
         }
+        #endif
     }
     
     func testFragmentsDuplicate() {
+        #if os(macOS)
         expectFatalError(expectedMessage: "Fragment dublicates. You have two or more fragments with equal name") {
             _ = GraphQLBody(operation: self.fields, self.crops, self.crops)
         }
+        #endif
     }
     
     static var allTests = [
