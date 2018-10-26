@@ -61,7 +61,7 @@ class GraphQLRequestTests: XCTestCase {
             XCTFail()
         })
         
-        XCTAssertEqual(request.body.description, " query { getFields { id name }  }")
+        XCTAssertEqual(request.body.description, "{ \"query\" : \" query { getFields { id name }  }\" }")
 
     }
     

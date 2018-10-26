@@ -37,7 +37,7 @@ class GraphQLBodyTests: XCTestCase {
     func testInit() {
         let body = GraphQLBody(operation: self.fields, self.crops)
         
-        let string = "fragment TestTypeFragment on TestType{ id name crop }   query { getFields { id name } getCrops { ...TestTypeFragment }  }"
+        let string = "{ \"query\" : \"fragment TestTypeFragment on TestType{ id name crop }   query { getFields { id name } getCrops { ...TestTypeFragment }  }\" }"
         XCTAssertEqual(body.description, string)
     }
     

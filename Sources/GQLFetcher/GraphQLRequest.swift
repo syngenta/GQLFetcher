@@ -49,7 +49,7 @@ public class GraphQLRequest<Result: GraphQLRequestResult> {
         return false
     }
     
-    func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
+    public func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
         let queue = queue ?? self.queue
         
         let fetch = Promise<GraphQLJSON> { resolver in
@@ -72,14 +72,14 @@ public class GraphQLRequest<Result: GraphQLRequestResult> {
             } catch let error {
                 throw GraphQLResultError.resultMappingError(data: _data, error: error)
             }
-        }.done {
-            success($0)
-        }.catch {
-            failure(GraphQLRequestError(error: $0, body: self.body))
+            }.done {
+                success($0)
+            }.catch {
+                failure(GraphQLRequestError(error: $0, body: self.body))
         }
     }
     
-    func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil) -> Promise<Result> {
+    public func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil) -> Promise<Result> {
         return Promise { resolver in
             self.perform(context: context, queue: queue, success: {
                 resolver.fulfill($0)

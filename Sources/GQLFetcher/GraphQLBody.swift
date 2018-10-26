@@ -38,9 +38,9 @@ public struct GraphQLBody: CustomStringConvertible {
             return dictionary
         }
         let fragments = fragments_.values.reduce("", { $0 + $1 + " " })
-        let query = operations.reduce("", { $0 + $1.body + " " })
-        
-        self.body = "\(fragments) \(type) { \(query) }"
+        let operation = operations.reduce("", { $0 + $1.body + " " })
+        let query = "\(fragments) \(type) { \(operation) }".replacingOccurrences(of: "\"", with: "\\\"")
+        self.body = "{ \"query\" : \"\(query)\" }"
         
         guard let data = self.body.data(using: .utf8) else {
             fatalError("Can't encode 'body' to 'data'")
