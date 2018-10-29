@@ -50,7 +50,7 @@ struct TestNetworker: GraphQLNetworker {
                 sleep(self._sleep)
                 switch self.type {
                     case .normal: do {
-                        let string = "{\"data\" : {\"data\" : \"\"}}"
+                        let string = "{\"data\" : {\"getFields\" : {\"data\" : \"\"}}}"
                         let data = string.data(using: .utf8)
                         self.hundler?(data, nil, nil)
                     }

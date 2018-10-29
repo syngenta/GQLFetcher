@@ -9,7 +9,7 @@ import Foundation
 import PromiseKit
 import GQLSchema
 
-public class GraphQLRequest<Result: GraphQLRequestResult> {
+public class GraphQLRequest<Result: GraphQLResult> {
     
     public let body: GraphQLBody
     
@@ -22,9 +22,11 @@ public class GraphQLRequest<Result: GraphQLRequestResult> {
         return q
     }()
     private weak var task: GraphQLTask?
+    private var operations: [String : GraphQLOperation]
     
     public init<O: GraphQLOperation>(operations: [O]) {
         self.body = GraphQLBody(operations: operations)
+        self.operations = Dictionary(uniqueKeysWithValues: operations.map{ ($0.name, $0) })
     }
     
     public convenience init<O: GraphQLOperation>(operation operations: O...) {
@@ -67,15 +69,17 @@ public class GraphQLRequest<Result: GraphQLRequestResult> {
             guard let _data = data["data"] as? GraphQLJSON else {
                 throw GraphQLResultError.resultError(data: data)
             }
+            
+            let responses = try GraphQLResponse<Result.Result>.create(operations: self.operations, data: _data)
             do {
-                return try Promise.value(Result(data: _data, context: context))
+                return try Promise.value(Result(responses: responses, context: context))
             } catch let error {
                 throw GraphQLResultError.resultMappingError(data: _data, error: error)
             }
-            }.done {
-                success($0)
-            }.catch {
-                failure(GraphQLRequestError(error: $0, body: self.body))
+        }.done {
+            success($0)
+        }.catch {
+            failure(GraphQLRequestError(error: $0, body: self.body))
         }
     }
     

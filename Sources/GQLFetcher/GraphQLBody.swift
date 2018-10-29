@@ -22,24 +22,23 @@ public struct GraphQLBody: CustomStringConvertible {
     }
     
     init<O: GraphQLOperation>(operations: [O]) {
-        guard let type = operations.first?.queryType else {
+        guard let type = operations.first?.type else {
             fatalError("'operations' must containes 1 and more operations")
         }
         
-        let fragments_ = operations.reduce([String : String]()) { (dictionary, operation) -> [String : String] in
-            var dictionary = dictionary
-            if let fragment = operation.fragmentQuery {
-                if dictionary[fragment.name] == nil {
-                    dictionary[fragment.name] = fragment.body
-                } else {
-                    fatalError("Fragment dublicates. You have two or more fragments with equal name")
-                }
-            }
-            return dictionary
+        let names = operations.map { $0.name }
+        guard names.count == Set(names).count else {
+            fatalError("Two or more operations with equal name. Use 'alias' to resolve this problem")
         }
-        let fragments = fragments_.values.reduce("", { $0 + $1 + " " })
+        
+        let fragmentNames = operations.compactMap { $0.fragmentQuery?.name }
+        guard fragmentNames.count == Set(fragmentNames).count else {
+            fatalError("Fragment dublicates. You have two or more fragments with equal name")
+        }
+        
+        let fragments = operations.compactMap { $0.fragmentQuery?.body }.joined(separator: " ")
         let operation = operations.reduce("", { $0 + $1.body + " " })
-        let query = "\(fragments) \(type) { \(operation) }".replacingOccurrences(of: "\"", with: "\\\"")
+        let query = "\(fragments) \(type) { \(operation) }".jsonEscaped
         self.body = "{ \"query\" : \"\(query)\" }"
         
         guard let data = self.body.data(using: .utf8) else {

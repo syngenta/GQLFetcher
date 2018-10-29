@@ -14,7 +14,7 @@ class GraphQLTaskTests: XCTestCase {
     
     private var networker = TestNetworker()
     private lazy var testContext = TestContext(networker: self.networker)
-    private lazy var query = GraphQLQuery(body: "getFields { id name }")
+    private lazy var query = GraphQLQuery(name: "getFields", body: "getFields { id name }")
     private lazy var body = GraphQLBody(operation: self.query)
     private weak var task: GraphQLTask?
     

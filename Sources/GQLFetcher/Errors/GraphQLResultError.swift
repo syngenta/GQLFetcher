@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GQLSchema
 
 public enum GraphQLResultError: Error, Equatable {
     
@@ -23,6 +24,8 @@ public enum GraphQLResultError: Error, Equatable {
     case resultMappingError(data: GraphQLJSON, error: Error)
     case networkerError(error: Error)
     case customResultError(error: String)
+    case differentTypes
+    case noOperationForData(operations: [String : GraphQLOperation], data: Any?)
     
     public var code: Int {
         switch self {
@@ -36,6 +39,8 @@ public enum GraphQLResultError: Error, Equatable {
         case .resultMappingError(_, _): return 7
         case .networkerError(_): return 8
         case .customResultError(_): return 9
+        case .differentTypes: return 10
+        case .noOperationForData(_, _): return 11
         }
     }
     
@@ -51,6 +56,8 @@ public enum GraphQLResultError: Error, Equatable {
         case .resultMappingError(let data, let error): return "resultMappingError - \(data) \(error)"
         case .networkerError(let error): return "networkerError - \(error)"
         case .customResultError(let error): return "customResultError - \(error)"
+        case .differentTypes: return "differentTypes"
+        case .noOperationForData(let operations, let data): return "noOperationForData - \(operations) \(String(describing: data))"
         }
     }
     

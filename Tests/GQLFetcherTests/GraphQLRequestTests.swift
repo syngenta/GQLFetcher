@@ -12,11 +12,13 @@ import XCTest
 
 class GraphQLRequestTests: XCTestCase {
     
-    class TestResult: GraphQLRequestResult {
-        let data: [String : Any?]
-        required init<Context>(data: [String : Any?], context: Context) throws where Context : GraphQLContext {
-            self.data = data
-            if data["mapping_error"] != nil {
+    class TestResult: GraphQLResult {
+        
+        let data: GraphQLJSON
+
+        required init<Context>(responses: [GraphQLResponse<GraphQLJSON>], context: Context) throws where Context : GraphQLContext {
+            self.data = responses.first!.data
+            if self.data["mapping_error"] != nil {
                 throw GraphQLResultError.unnown
             }
         }
@@ -24,7 +26,7 @@ class GraphQLRequestTests: XCTestCase {
     
     private var networker = TestNetworker()
     private lazy var context = TestContext(networker: self.networker)
-    private lazy var query = GraphQLQuery(body: "getFields { id name }")
+    private lazy var query = GraphQLQuery(name: "getFields", body: "getFields { id name }")
     private lazy var body = GraphQLBody(operation: self.query)
     private weak var task: GraphQLTask?
     
@@ -40,6 +42,7 @@ class GraphQLRequestTests: XCTestCase {
             done(data)
             expectation.fulfill()
         }.catch { error in
+            print(error)
             _catch(error.requestError)
             expectation.fulfill()
         }
@@ -90,7 +93,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testMappingError() {
-        self.perform(type: .customResult(result: "{\"data\" : {\"mapping_error\" : \"\"}}"), done: { _ in
+        self.perform(type: .customResult(result: "{\"data\" : {\"getFields\" : {\"mapping_error\" : \"\"}}}"), done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.error.code, 7)

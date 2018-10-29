@@ -19,7 +19,7 @@ class GraphQLHTTPNetworkerTests: XCTestCase {
         return config
     }()
     private lazy var networker = GraphQLHTTPNetworker(configuration: self.configuration)
-    private lazy var query = GraphQLQuery(body: "getFields { id name }")
+    private lazy var query = GraphQLQuery(name: "getFields", body: "getFields { id name }")
     private lazy var body = GraphQLBody(operation: self.query)
     
 
