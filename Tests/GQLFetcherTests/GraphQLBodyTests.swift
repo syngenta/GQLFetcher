@@ -34,8 +34,7 @@ class GraphQLBodyTests: XCTestCase {
     private let fields = GraphQLQuery(name: "getFields", body: "getFields { id name }")
     private lazy var crops = GraphQLQuery(name: "getCrops", body: "getCrops { ...TestTypeFragment }", fragment: self.cropsFragment)
     private lazy var crops2 = GraphQLQuery(name: "getCrops1", body: "getCrops { ...TestTypeFragment }", fragment: self.cropsFragment)
-
-
+    
     func testInit() {
         let body = GraphQLBody(operation: self.fields, self.crops)
         

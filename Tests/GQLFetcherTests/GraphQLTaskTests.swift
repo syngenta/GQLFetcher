@@ -21,7 +21,8 @@ class GraphQLTaskTests: XCTestCase {
     lazy var promise = Promise<GraphQLJSON> {
         let task = GraphQLTask(body: self.body, context: self.testContext, resolver: $0)
         self.task = task
-        task.start()
+        let q = OperationQueue()
+        q.addOperation(task)
     }
 
     func testInit() {
@@ -51,6 +52,41 @@ class GraphQLTaskTests: XCTestCase {
         self.task?.cancel()
         
         waitForExpectations(timeout: 1.5, handler: nil)
+    }
+    
+    func testCancel2() {
+        let expectation = self.expectation(description: #function)
+        
+        var done = 0
+        var cancel = 0
+        let q = OperationQueue()
+        q.maxConcurrentOperationCount = 1
+        
+        for i in 0...100 {
+            let _promise = Promise<GraphQLJSON> {
+                let task = GraphQLTask(body: self.body, context: self.testContext, resolver: $0)
+                q.addOperation(task)
+            }
+            _promise.done { data in
+                done += 1
+                print("done - \(done), cancel - \(cancel), count - \(q.operationCount)")
+
+                if i == 5 {
+                    q.cancelAllOperations()
+                }
+            }
+            .catch { error in
+                cancel += 1
+                print("done - \(done), cancel - \(cancel), count - \(q.operationCount)")
+                if done == 6, cancel == 95, q.operationCount == 0 {
+                    print("done - \(done), cancel - \(cancel), count - \(q.operationCount)")
+                    expectation.fulfill()
+                    XCTAssert(true)
+                }
+            }
+        }
+        
+        waitForExpectations(timeout: 10, handler: nil)
     }
     
     func testParseError() {

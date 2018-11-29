@@ -13,14 +13,36 @@ import XCTest
 class GraphQLRequestTests: XCTestCase {
     
     class TestResult: GraphQLResult {
-        
         let data: GraphQLJSON
 
-        required init<Context>(responses: [GraphQLResponse<GraphQLJSON>], context: Context) throws where Context : GraphQLContext {
-            self.data = responses.first!.data
+        required init(responses: [String : GraphQLResponse<GraphQLJSON>], context: GraphQLContext) throws {
+            self.data = responses.values.first!.data
             if self.data["mapping_error"] != nil {
                 throw GraphQLResultError.unnown
             }
+        }
+    }
+    
+    class TestAdditionalResult: GraphQLAdditionalResult {
+        typealias Additional = Int
+        
+        let data: GraphQLJSON
+        let additional: Additional
+        
+        required init(responses: [String : GraphQLResponse<GraphQLJSON>], context: GraphQLContext) throws {
+            self.data = responses.values.first!.data
+            if self.data["mapping_error"] != nil {
+                throw GraphQLResultError.unnown
+            }
+            self.additional = -1
+        }
+        
+        required init(responses: [String : GraphQLResponse<GraphQLJSON>], context: GraphQLContext, additional: Additional) throws {
+            self.data = responses.values.first!.data
+            if self.data["mapping_error"] != nil {
+                throw GraphQLResultError.unnown
+            }
+            self.additional = additional
         }
     }
     
@@ -31,12 +53,21 @@ class GraphQLRequestTests: XCTestCase {
     private weak var task: GraphQLTask?
     
     @discardableResult
-    func perform(key: String = #function, type: TestNetworker.ResultType = .normal, queue: OperationQueue? = nil, timeout: TimeInterval = 1.5,  done: @escaping (TestResult) -> Void, catch _catch: @escaping (GraphQLRequestError) -> Void, before: ((GraphQLRequest<TestResult>) -> Void)? = nil) -> GraphQLRequest<TestResult> {
+    func perform<Result: GraphQLResult>(key: String = #function,
+                                        type: TestNetworker.ResultType = .normal,
+                                        queue: OperationQueue? = nil,
+                                        timeout: TimeInterval = 1.5,
+                                        done: @escaping (Result) -> Void,
+                                        catch _catch: @escaping (GraphQLRequestError) -> Void,
+                                        before: ((GraphQLRequest<Result>) -> Void)? = nil,
+                                        beforePerform: ((GraphQLRequest<Result>) -> Void)? = nil) -> GraphQLRequest<Result> {
         
         let expectation = self.expectation(description: key)
         
         self.networker.type = type
-        let request = GraphQLRequest<TestResult>(operation: self.query)
+        let request = GraphQLRequest<Result>(operation: self.query)
+        
+        beforePerform?(request)
         
         request.perform(context: self.context, queue: queue).done { (data) in
             done(data)
@@ -57,7 +88,7 @@ class GraphQLRequestTests: XCTestCase {
 
     func testInit() {
         
-        let request = self.perform(key: #function, done: { (result) in
+        let request : GraphQLRequest<TestResult> = self.perform(key: #function, done: { (result) in
             print(result.data)
             XCTAssertNotNil(result.data["data"]!)
         }, catch: { _ in
@@ -69,7 +100,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testFetchError() {
-        self.perform(type: .error, done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(type: .error, done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.error.code, 2)
@@ -77,7 +108,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testGraphQLErrors() {
-        self.perform(type: .graphQLErrors, done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(type: .graphQLErrors, done: { _ in
             XCTFail()
         }, catch: { error in
             switch error.error {
@@ -93,7 +124,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testMappingError() {
-        self.perform(type: .customResult(result: "{\"data\" : {\"getFields\" : {\"mapping_error\" : \"\"}}}"), done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(type: .customResult(result: "{\"data\" : {\"getFields\" : {\"mapping_error\" : \"\"}}}"), done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.error.code, 7)
@@ -101,7 +132,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testResultError() {
-        self.perform(type: .customResult(result: "{\"data\" : [\"some\"]}"), done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(type: .customResult(result: "{\"data\" : [\"some\"]}"), done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.error.code, 6)
@@ -109,7 +140,7 @@ class GraphQLRequestTests: XCTestCase {
     }
     
     func testRequestCancel() {
-        self.perform(done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.isCancelled, true)
@@ -120,7 +151,7 @@ class GraphQLRequestTests: XCTestCase {
     
     func testRequestCancel2() {
         self.networker._sleep = 2
-        self.perform(queue: OperationQueue(), timeout: 3, done: { _ in
+        let _ : GraphQLRequest<TestResult> = self.perform(queue: OperationQueue(), timeout: 3, done: { _ in
             XCTFail()
         }, catch: { error in
             XCTAssertEqual(error.error.code, 1)
@@ -133,6 +164,134 @@ class GraphQLRequestTests: XCTestCase {
     func testRequestCancel3() {
         let request = GraphQLRequest<TestResult>(operation: self.query)
         XCTAssertEqual(request.cancel(), false)
+    }
+    
+    func testAdditionalResultPerform1() { // not add addition
+        let _ : GraphQLRequest<TestAdditionalResult> = self.perform(done: { (result) in
+            print(result.data)
+            XCTAssertNotNil(result.data["data"]!)
+            XCTAssertEqual(result.additional, -1)
+        }, catch: { _ in
+            XCTFail()
+        })
+    }
+    
+    func testAdditionalResultPerform2() { // add addition
+        let _ : GraphQLRequest<TestAdditionalResult> = self.perform(done: { (result) in
+            print(result.data)
+            XCTAssertNotNil(result.data["data"]!)
+            XCTAssertEqual(result.additional, 10)
+        }, catch: { _ in
+            XCTFail()
+        }, beforePerform: { _ = $0.add(10) })
+    }
+    
+    func testRecursivePerform() {
+        let expectation = self.expectation(description: #function)
+        
+        let request = GraphQLRequest<TestResult>(operation: self.query)
+        self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"123\"}}}")
+        
+        request.perform(context: self.context, again: { result -> GraphQLRequest<GraphQLRequestTests.TestResult>? in
+            return nil
+        })
+        .done { (data) in
+            XCTAssertEqual(data.count, 1)
+            XCTAssertEqual(data.first!.data["data"] as! String, "123")
+            expectation.fulfill()
+            self.networker.type = .normal
+            
+            }.catch { error in
+                XCTFail()
+                print(error)
+                expectation.fulfill()
+                self.networker.type = .normal
+        }
+        
+        waitForExpectations(timeout: 3, handler: nil)
+    }
+    
+    func testRecursivePerform2() {
+        let expectation = self.expectation(description: #function)
+        
+        let request = GraphQLRequest<TestResult>(operation: self.query)
+        self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"123\"}}}")
+        
+        request.perform(context: self.context, again: { result -> GraphQLRequest<GraphQLRequestTests.TestResult>? in
+            if let data = result.data["data"] as? String, data == "1234" {
+                return nil
+            }
+            self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"1234\"}}}")
+            return GraphQLRequest<TestResult>(operation: self.query)
+        })
+            .done { (data) in
+                XCTAssertEqual(data.count, 2)
+                XCTAssertEqual(data.first!.data["data"] as! String, "123")
+                XCTAssertEqual(data.last!.data["data"] as! String, "1234")
+
+                expectation.fulfill()
+                self.networker.type = .normal
+                
+            }.catch { error in
+                XCTFail()
+                print(error)
+                expectation.fulfill()
+                self.networker.type = .normal
+        }
+        
+        waitForExpectations(timeout: 3, handler: nil)
+    }
+    
+    func testSecondResultPerform() {
+        let expectation = self.expectation(description: #function)
+        
+        let request = GraphQLRequest<TestResult>(operation: self.query)
+        self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"123\"}}}")
+
+        request.perform(context: self.context, then: { (result) -> GraphQLRequest<TestResult> in
+            self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"\(String(describing: result.data["data"]!!))\"}}}")
+            let q = GraphQLQuery(name: "getFields", body: "getFields { id name }")
+            return  GraphQLRequest(operation: q)
+        }).done { (data) in
+            XCTAssertEqual(data.data["data"] as! String, "123")
+            expectation.fulfill()
+            self.networker.type = .normal
+
+        }.catch { error in
+            XCTFail()
+            print(error)
+            expectation.fulfill()
+            self.networker.type = .normal
+        }
+        
+        waitForExpectations(timeout: 3, handler: nil)
+    }
+    
+    func testSecondResultsPerform() {
+        let expectation = self.expectation(description: #function)
+        
+        let request = GraphQLRequest<TestResult>(operation: self.query)
+        self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"123\"}}}")
+        
+        request.perform(context: self.context, then: { (result) -> [GraphQLRequest<TestResult>] in
+            self.networker.type = .customResult(result: "{\"data\" : {\"getFields\" : {\"data\" : \"\(String(describing: result.data["data"]!!))\"}}}")
+            let q = GraphQLQuery(name: "getFields", body: "getFields { id name }")
+            return [GraphQLRequest(operation: q), GraphQLRequest(operation: q)]
+        }).done { (data) in
+            XCTAssertEqual(data.count, 2)
+            XCTAssertEqual(data.first!.data["data"] as! String, "123")
+            XCTAssertEqual(data.last!.data["data"] as! String, "123")
+            expectation.fulfill()
+            self.networker.type = .normal
+            
+            }.catch { error in
+                XCTFail()
+                print(error)
+                expectation.fulfill()
+                self.networker.type = .normal
+        }
+        
+        waitForExpectations(timeout: 3, handler: nil)
     }
     
     static var allTests = [

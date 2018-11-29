@@ -10,8 +10,9 @@ import XCTest
 @testable import GQLSchema
 
 fileprivate struct TestlistResult: GraphQLResult {
-    let responses: [GraphQLResponse<[GraphQLJSON]>]
-    init<Context>(responses: [GraphQLResponse<[GraphQLJSON]>], context: Context) throws where Context : GraphQLContext {
+    let responses: [String : GraphQLResponse<[GraphQLJSON]>]
+
+    init(responses: [String : GraphQLResponse<[GraphQLJSON]>], context: GraphQLContext) throws {
         self.responses = responses
     }
 }
@@ -28,7 +29,7 @@ class GraphQLResultTests: XCTestCase {
 
     func testGraphQLResponseInit() {
         let operation = GraphQLQuery(name: "getSome", body: "getSome { id name }")
-        let responce = try! GraphQLResponse<[String]>(operation: operation, data: ["string"])
+        let responce = GraphQLResponse<[String]>(operation: operation, data: ["string"])
         XCTAssertEqual(responce.data, ["string"])
     }
     
@@ -52,8 +53,8 @@ class GraphQLResultTests: XCTestCase {
         do {
             let responses = try GraphQLResponse<[String]>.create(operations: operations, data: data)
             XCTAssertEqual(responses.count, 2)
-            let getSome = responses.filter { $0.operation.name ==  "getSome"}.first
-            let getSome2 = responses.filter { $0.operation.name ==  "getSome2"}.first
+            let getSome = responses["getSome"]
+            let getSome2 = responses["getSome2"]
             
             XCTAssertEqual(getSome?.data, ["some"])
             XCTAssertEqual(getSome2?.data, ["some2"])
@@ -104,7 +105,7 @@ class GraphQLResultTests: XCTestCase {
         let data : GraphQLJSON = ["getSome" : values]
         do {
             let result : TestlistResult = try self.response(operations: operations, data: data)
-            let _data = result.responses.first?.data as? [[String : String]]
+            let _data = result.responses["getSome"]?.data as? [[String : String]]
             XCTAssertEqual(_data, values)
         } catch {
             XCTFail()

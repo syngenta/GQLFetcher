@@ -17,7 +17,7 @@ class TestContext: GraphQLContext {
     }
 }
 
-struct TestNetworker: GraphQLNetworker {
+class TestNetworker: GraphQLNetworker {
     
     enum ResultType {
         case normal
@@ -79,7 +79,11 @@ struct TestNetworker: GraphQLNetworker {
     }
     
     var _sleep: UInt32
-    var type: ResultType
+    var type: ResultType {
+        didSet {
+            print(type)
+        }
+    }
     init(sleep _sleep: UInt32 = 1, type: ResultType = .normal) {
         self._sleep = _sleep
         self.type = type

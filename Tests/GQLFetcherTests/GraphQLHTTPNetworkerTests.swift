@@ -39,11 +39,11 @@ class GraphQLHTTPNetworkerTests: XCTestCase {
     func testRequestFromBody() {
 
         let request = self.networker.request(to: URL(string: "http://localhost")!, for: self.body)
-        
+ 
         XCTAssertEqual(request.url?.absoluteString, "http://localhost")
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.httpShouldHandleCookies, false)
-        XCTAssertEqual(request.httpBody, self.body.body.data(using: .utf8))
+        XCTAssertEqual(request.httpBody?.count, 45)
         XCTAssertEqual(request.allHTTPHeaderFields, ["Accept": "application/json", "Content-Type": "application/json"])
     }
     
