@@ -10,7 +10,7 @@ import Foundation
 class Environment {
     
     enum Key: String {
-        case debugLoging = "com.lumyk.GQLFetcher.debugLoging"
+        case debugLoging = "GQL_FETCHER_DEBUG_LOGING"
     }
     
     static var debugLoging: Bool {
