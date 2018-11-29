@@ -1,0 +1,8 @@
+osx_image: xcode10
+language: objective-c
+
+script:
+- set -o pipefail && xcodebuild test -enableCodeCoverage YES -scheme GQLFetcher-Package ONLY_ACTIVE_ARCH=NO | xcpretty
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t 19a4a991-9c08-4705-b537-4fcec2ab00ec
