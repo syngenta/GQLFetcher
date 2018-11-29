@@ -56,7 +56,7 @@ class GraphQLRequestTests: XCTestCase {
     func perform<Result: GraphQLResult>(key: String = #function,
                                         type: TestNetworker.ResultType = .normal,
                                         queue: OperationQueue? = nil,
-                                        timeout: TimeInterval = 1.5,
+                                        timeout: TimeInterval = 3,
                                         done: @escaping (Result) -> Void,
                                         catch _catch: @escaping (GraphQLRequestError) -> Void,
                                         before: ((GraphQLRequest<Result>) -> Void)? = nil,
@@ -264,7 +264,7 @@ class GraphQLRequestTests: XCTestCase {
             self.networker.type = .normal
         }
         
-        waitForExpectations(timeout: 3, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
     }
     
     func testSecondResultsPerform() {
@@ -291,7 +291,7 @@ class GraphQLRequestTests: XCTestCase {
                 self.networker.type = .normal
         }
         
-        waitForExpectations(timeout: 3, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
     }
     
     static var allTests = [

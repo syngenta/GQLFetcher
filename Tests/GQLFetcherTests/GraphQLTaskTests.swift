@@ -36,7 +36,7 @@ class GraphQLTaskTests: XCTestCase {
             XCTFail()
         }
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
     }
     
     func testCancel() {
@@ -51,7 +51,7 @@ class GraphQLTaskTests: XCTestCase {
         }
         self.task?.cancel()
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
     }
     
     func testCancel2() {
@@ -119,7 +119,7 @@ class GraphQLTaskTests: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
         self.networker.type = .normal
     }
     
@@ -134,7 +134,7 @@ class GraphQLTaskTests: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
         self.networker.type = .normal
     }
     
@@ -150,7 +150,7 @@ class GraphQLTaskTests: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
         self.networker.type = .normal
     }
     
@@ -166,7 +166,7 @@ class GraphQLTaskTests: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectations(timeout: 1.5, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
         self.networker.type = .normal
     }
     
