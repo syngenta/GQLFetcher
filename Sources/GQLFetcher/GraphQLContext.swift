@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol GraphQLContext: class {
+public protocol GraphQLContext {
     /// Must contains GraphQL server URL
     var url: URL { get }
     var networker: GraphQLNetworker { get }

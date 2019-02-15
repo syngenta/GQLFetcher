@@ -90,7 +90,7 @@ class GraphQLTask: Operation {
         let group = DispatchGroup()
         
         group.enter()
-        let fetch = GraphQLTask.fetch(body: self.body, context: context, task: { self.task = $0 })
+        let fetch = GraphQLTask.fetch(body: self.body, context: self.context, task: { self.task = $0 })
         
         fetch.then { GraphQLTask.parse(data: $0) }
             

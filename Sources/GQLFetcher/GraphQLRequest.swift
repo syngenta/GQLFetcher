@@ -88,11 +88,11 @@ public extension GraphQLRequest {
     ///  Will run performation with closure result
     ///
     /// - Parameters:
-    ///   - context: The **Context** generic of **GraphQLContext** protocol
+    ///   - context: The **Context** protocol of **GraphQLContext**
     ///   - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///   - success: Closure with success result(generic protocol of **GraphQLResult**)
     ///   - failure: Closure with failure result(error struct **GraphQLRequestError**)
-    public func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
+    public func perform(context: GraphQLContext, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
         let queue = queue ?? self.queue
         
         let fetch = Promise<GraphQLJSON> { resolver in
@@ -117,20 +117,20 @@ public extension GraphQLRequest {
             } catch let error {
                 throw GraphQLResultError.resultMappingError(data: _data, error: error)
             }
-        }
-        .done { success($0) }
-        .catch {
-            failure(GraphQLRequestError(error: $0, body: self.body))
+            }
+            .done { success($0) }
+            .catch {
+                failure(GraphQLRequestError(error: $0, body: self.body))
         }
     }
     
     /// Will run performation with **Promise** result
     ///
     /// - Parameters:
-    ///   - context: The **Context** generic of **GraphQLContext** protocol
+    ///   - context: The **Context** protocol of **GraphQLContext**
     ///   - queue: **OperationQueue** can't be nil (you can use your *queue*, for stoping operations)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult**
-    public func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil) -> Promise<Result> {
+    public func perform(context: GraphQLContext, queue: OperationQueue? = nil) -> Promise<Result> {
         return Promise { resolver in
             self.perform(context: context, queue: queue, success: {
                 resolver.fulfill($0)
@@ -144,15 +144,16 @@ public extension GraphQLRequest {
     /// from the given components.
     ///
     /// - Parameters:
-    ///     - context: The **Context** generic of **GraphQLContext** protocol
+    ///     - context: The **Context** protocol of **GraphQLContext**
     ///     - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///     - again: Closure for creating requests (Calls until return nil)
     ///     - result: Can be nil only first time, next time it will be *result* of previus operation
     /// - Returns:
     ///     - Closure get Request for next operation, if nil — all done
     ///     - Function return Promise with array af all results
-    public static func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil,
-                                                        again: @escaping (_ result: Result?) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
+    public static func perform(context: GraphQLContext,
+                               queue: OperationQueue? = nil,
+                               again: @escaping (_ result: Result?) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
         
         func _perform(values: [Result] = [], result: Result? = nil) -> Promise<[Result]> {
             let _request = again(result)
@@ -168,15 +169,16 @@ public extension GraphQLRequest {
     /// from the given components.
     ///
     /// - Parameters:
-    ///     - context: The **Context** generic of **GraphQLContext** protocol
+    ///     - context: The **Context** protocol of **GraphQLContext**
     ///     - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///     - again: Closure for creating requests (Calls until return nil)
     ///     - result: *result* of previus operation
     /// - Returns:
     ///     - Closure get Request for next operation, if nil — all done
     ///     - Function return Promise with array af all results
-    public func perform<Context: GraphQLContext>(context: Context, queue: OperationQueue? = nil,
-                                                 again: @escaping (_ result: Result) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
+    public func perform(context: GraphQLContext,
+                        queue: OperationQueue? = nil,
+                        again: @escaping (_ result: Result) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
         return GraphQLRequest.perform(context: context, queue: queue) { result -> GraphQLRequest<Result>? in
             if let result = result {
                 return again(result)
@@ -188,14 +190,14 @@ public extension GraphQLRequest {
     /// Run two performations by order (You can use when second request based on data from first)
     ///
     /// - Parameters:
-    ///   - context: The **Context** generic of **GraphQLContext** protocol
+    ///   - context: The **Context** protocol of **GraphQLContext**
     ///   - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///   - then: Closure that give *first* result and get *second* request (You must return *second* request)
     ///     - result: Result of *first* operation (generic protocol of **GraphQLResult**)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult** for *second* result
-    public func perform<Context: GraphQLContext, SecondResult: GraphQLResult>(context: Context,
-                                                                              queue: OperationQueue? = nil,
-                                                                              then: @escaping (_ result: Result) -> GraphQLRequest<SecondResult>) -> Promise<SecondResult> {
+    public func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
+                                                     queue: OperationQueue? = nil,
+                                                     then: @escaping (_ result: Result) -> GraphQLRequest<SecondResult>) -> Promise<SecondResult> {
         return self.perform(context: context, queue: queue).then {
             then($0).perform(context: context, queue: queue)
         }
@@ -204,14 +206,14 @@ public extension GraphQLRequest {
     /// Run two or more performations by order (You can use when second requests based on data from first)
     ///
     /// - Parameters:
-    ///   - context: The **Context** generic of **GraphQLContext** protocol
+    ///   - context: The **Context** protocol of **GraphQLContext**
     ///   - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///   - then: Closure that give *first* result and get *second* requests (You must return *second* requests **Array**)
     ///     - result: Result of *first* operation (generic protocol of **GraphQLResult**)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult** for *second* results **Array**
-    public func perform<Context: GraphQLContext, SecondResult: GraphQLResult>(context: Context,
-                                                                              queue: OperationQueue? = nil,
-                                                                              then: @escaping (_ result: Result) -> [GraphQLRequest<SecondResult>]) -> Promise<[SecondResult]> {
+    public func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
+                                                     queue: OperationQueue? = nil,
+                                                     then: @escaping (_ result: Result) -> [GraphQLRequest<SecondResult>]) -> Promise<[SecondResult]> {
         return self.perform(context: context, queue: queue).then {
             when(fulfilled: then($0).map { $0.perform(context: context, queue: queue) })
         }

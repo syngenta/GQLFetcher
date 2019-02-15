@@ -10,7 +10,7 @@ import Foundation
 extension URLSessionDataTask: GraphQLCancaleble {}
 
 /// Class for getting *Data* from network
-public struct GraphQLHTTPNetworker: GraphQLNetworker {
+public class GraphQLHTTPNetworker: GraphQLNetworker {
     
     let configuration: URLSessionConfiguration
     let session: URLSession
