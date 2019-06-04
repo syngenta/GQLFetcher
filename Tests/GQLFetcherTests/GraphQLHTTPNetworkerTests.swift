@@ -33,7 +33,7 @@ class GraphQLHTTPNetworkerTests: XCTestCase {
             XCTAssertEqual((error as! URLError).code, URLError.cannotConnectToHost)
             expectation.fulfill()
         }
-        waitForExpectations(timeout: 2, handler: nil)
+        waitForExpectations(timeout: 30, handler: nil)
     }
     
     func testRequestFromBody() {

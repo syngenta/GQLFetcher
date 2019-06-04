@@ -20,7 +20,7 @@ extension XCTestCase {
         // act, perform on separate thead because a call to fatalError pauses forever
         DispatchQueue.global(qos: .userInitiated).async(execute: testcase)
         
-        waitForExpectations(timeout: 10) { _ in
+        waitForExpectations(timeout: 30) { _ in
             // assert
             XCTAssertEqual(assertionMessage, expectedMessage)
             
