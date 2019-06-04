@@ -54,7 +54,7 @@ class GraphQLBodyTests: XCTestCase {
     func testQueryNamesDuplicate() {
         #if os(macOS)
         expectFatalError(expectedMessage: "Two or more operations with equal name. Use 'alias' to resolve this problem") {
-            _ = GraphQLBody(operation: self.fields, self.crops, self.crops)
+            _ = GraphQLBody(operation: self.fields, self.crops, self.crops, self.crops)
         }
         #endif
     }
