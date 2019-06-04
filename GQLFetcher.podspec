@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.name         = "GQLFetcher"
   s.version      = `git describe --abbrev=0 --tags`
   s.summary      = "Library for fetching GraphQL data"
-  s.description  = "GraphQL fetching library, can be used with GQLSchema library for discribing requests"
+  s.description  = "GraphQL fetching library, can be used only with GQL Schema library for describing requests"
   s.homepage     = "https://github.com/Lumyk/GQLFetcher"
   s.license      = { :type => "MIT", :file => "LICENSE" }
   s.author       = { "Evgeny Kalashnikov" => "lumyk@me.com" }
