@@ -10,10 +10,6 @@ import XCTest
 
 class EnvironmentTests: XCTestCase {
 
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
     func testEnvironment() {
         XCTAssertNil(Environment.shared[Environment.Key.debugLoging])
         Environment.shared[Environment.Key.debugLoging] = "1"
