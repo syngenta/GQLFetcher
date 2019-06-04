@@ -76,7 +76,7 @@ public extension GraphQLRequest where Result: GraphQLAdditionalResult {
     ///
     /// - Parameter value: Additional value (You can use any type you want, for this you must specify Additional typedef in your result)
     /// - Returns: Returns request(self)
-    public func add(_ value: Result.Additional) -> Self {
+    func add(_ value: Result.Additional) -> Self {
         self.result = { try Result(responses: $0, context: $1, additional: value) }
         return self
     }
@@ -92,7 +92,7 @@ public extension GraphQLRequest {
     ///   - queue: **OperationQueue** can't be nil (for stoping operations you can use your *queue*)
     ///   - success: Closure with success result(generic protocol of **GraphQLResult**)
     ///   - failure: Closure with failure result(error struct **GraphQLRequestError**)
-    public func perform(context: GraphQLContext, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
+    func perform(context: GraphQLContext, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
         let queue = queue ?? self.queue
         
         let fetch = Promise<GraphQLJSON> { resolver in
@@ -117,10 +117,10 @@ public extension GraphQLRequest {
             } catch let error {
                 throw GraphQLResultError.resultMappingError(data: _data, error: error)
             }
-            }
-            .done { success($0) }
-            .catch {
-                failure(GraphQLRequestError(error: $0, body: self.body))
+        }
+        .done { success($0) }
+        .catch {
+            failure(GraphQLRequestError(error: $0, body: self.body))
         }
     }
     
@@ -130,7 +130,7 @@ public extension GraphQLRequest {
     ///   - context: The **Context** protocol of **GraphQLContext**
     ///   - queue: **OperationQueue** can't be nil (you can use your *queue*, for stoping operations)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult**
-    public func perform(context: GraphQLContext, queue: OperationQueue? = nil) -> Promise<Result> {
+    func perform(context: GraphQLContext, queue: OperationQueue? = nil) -> Promise<Result> {
         return Promise { resolver in
             self.perform(context: context, queue: queue, success: {
                 resolver.fulfill($0)
@@ -151,7 +151,7 @@ public extension GraphQLRequest {
     /// - Returns:
     ///     - Closure get Request for next operation, if nil — all done
     ///     - Function return Promise with array af all results
-    public static func perform(context: GraphQLContext,
+    static func perform(context: GraphQLContext,
                                queue: OperationQueue? = nil,
                                again: @escaping (_ result: Result?) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
         
@@ -176,7 +176,7 @@ public extension GraphQLRequest {
     /// - Returns:
     ///     - Closure get Request for next operation, if nil — all done
     ///     - Function return Promise with array af all results
-    public func perform(context: GraphQLContext,
+    func perform(context: GraphQLContext,
                         queue: OperationQueue? = nil,
                         again: @escaping (_ result: Result) -> GraphQLRequest<Result>?) -> Promise<[Result]> {
         return GraphQLRequest.perform(context: context, queue: queue) { result -> GraphQLRequest<Result>? in
@@ -195,7 +195,7 @@ public extension GraphQLRequest {
     ///   - then: Closure that give *first* result and get *second* request (You must return *second* request)
     ///     - result: Result of *first* operation (generic protocol of **GraphQLResult**)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult** for *second* result
-    public func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
+    func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
                                                      queue: OperationQueue? = nil,
                                                      then: @escaping (_ result: Result) -> GraphQLRequest<SecondResult>) -> Promise<SecondResult> {
         return self.perform(context: context, queue: queue).then {
@@ -211,7 +211,7 @@ public extension GraphQLRequest {
     ///   - then: Closure that give *first* result and get *second* requests (You must return *second* requests **Array**)
     ///     - result: Result of *first* operation (generic protocol of **GraphQLResult**)
     /// - Returns: Function return **Promise** with generic protocol of **GraphQLResult** for *second* results **Array**
-    public func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
+    func perform<SecondResult: GraphQLResult>(context: GraphQLContext,
                                                      queue: OperationQueue? = nil,
                                                      then: @escaping (_ result: Result) -> [GraphQLRequest<SecondResult>]) -> Promise<[SecondResult]> {
         return self.perform(context: context, queue: queue).then {

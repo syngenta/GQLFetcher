@@ -67,7 +67,7 @@ public enum GraphQLResultError: Error, Equatable {
 }
 
 public extension Error {
-    public var resultError: GraphQLResultError? {
+    var resultError: GraphQLResultError? {
         return self as? GraphQLResultError
     }
 }
