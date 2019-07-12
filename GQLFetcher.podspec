@@ -2,7 +2,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "GQLFetcher"
-  s.version      = `git describe --abbrev=0 --tags`
+  s.version      = "1.0.5"
   s.summary      = "Library for fetching GraphQL data"
   s.description  = "GraphQL fetching library, can be used only with GQL Schema library for describing requests"
   s.homepage     = "https://github.com/Lumyk/GQLFetcher"
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/Lumyk/GQLFetcher.git", :tag => "#{s.version}" }
 
-  s.swift_version = '4.2'
+  s.swift_version = '5.0'
   s.source_files  = "Sources/**/*"
 
   s.dependency "PromiseKit", "6.8.4"
