@@ -17,10 +17,16 @@ public class GraphQLHTTPNetworker: GraphQLNetworker {
     
     /// Initializer
     ///
-    /// - Parameter configuration: Session configuration for spetify your own configurations, by default **URLSessionConfiguration.default**
-    public init(configuration: URLSessionConfiguration = URLSessionConfiguration.default) {
+    /// - Parameters
+    ///     - configuration: Session configuration for spetify your own configurations, by default **URLSessionConfiguration.default**
+    ///     - delegate: A session delegate object that handles requests for authentication and other session-related events.
+    ///     - delegateQueue: An operation queue for scheduling the delegate calls and completion handlers.
+    ///     The queue should be a serial queue, in order to ensure the correct ordering of callbacks.
+    ///     If nil, the session creates a serial operation queue for performing all delegate method
+    ///     calls and completion handler calls.
+    public init(configuration: URLSessionConfiguration = URLSessionConfiguration.default, delegate: URLSessionDelegate? = nil, delegateQueue: OperationQueue? = nil) {
         self.configuration = configuration
-        self.session = URLSession(configuration: configuration)
+        self.session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
     }
     
     @discardableResult
