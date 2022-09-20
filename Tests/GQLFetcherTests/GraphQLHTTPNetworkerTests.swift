@@ -20,7 +20,7 @@ class GraphQLHTTPNetworkerTests: XCTestCase {
     }()
     private lazy var networker = GraphQLHTTPNetworker(configuration: self.configuration)
     private lazy var query = GraphQLQuery(name: "getFields", body: "getFields { id name }")
-    private lazy var body = GraphQLBody(operation: self.query)
+    private lazy var body = try! GraphQLBody(operation: self.query)
     
 
     func testPerform() {
@@ -43,7 +43,7 @@ class GraphQLHTTPNetworkerTests: XCTestCase {
         XCTAssertEqual(request.url?.absoluteString, "http://localhost")
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.httpShouldHandleCookies, false)
-        XCTAssertEqual(request.httpBody?.count, 45)
+        XCTAssertEqual(request.httpBody?.count, 66)
         XCTAssertEqual(request.allHTTPHeaderFields, ["Accept": "application/json", "Content-Type": "application/json"])
     }
     

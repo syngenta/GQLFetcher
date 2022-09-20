@@ -36,39 +36,75 @@ class GraphQLBodyTests: XCTestCase {
     private lazy var crops2 = GraphQLQuery(name: "getCrops1", body: "getCrops { ...TestTypeFragment }", fragment: self.cropsFragment)
     
     func testInit() {
-        let body = GraphQLBody(operation: self.fields, self.crops)
-        
-        let string = "{ \"query\" : \"fragment TestTypeFragment on TestType{ id name crop }  query { getFields { id name } getCrops { ...TestTypeFragment }  }\" }"
-        XCTAssertEqual(body.description, string)
+        do {
+            let body = try GraphQLBody(operation: self.fields, self.crops)
+
+            let string = "{ \"query\" : \"fragment TestTypeFragment on TestType{ id name crop }  query { getFields { id name } getCrops { ...TestTypeFragment }  }\", \"variables\": {} }"
+            XCTAssertEqual(body.description, string)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testInitWithVariables() {
+        do {
+            let var1 = GraphQLVariable(type: "Int", name: "some_int", value: 10)
+            let var2 = GraphQLVariable(type: "String", name: "some_string", value: "20")
+            let body = try GraphQLBody(operation: self.fields, self.crops, variables: [var1, var2])
+
+            let string = #"{ "query" : "fragment TestTypeFragment on TestType{ id name crop }  query($some_int: Int,$some_string: String) { getFields { id name } getCrops { ...TestTypeFragment }  }", "variables": {"some_int": 10,"some_string": "20"} }"#
+            XCTAssertEqual(body.description, string)
+        } catch {
+            XCTFail("\(error)")
+        }
     }
     
     func testBrokenInit() {
-        #if os(macOS)
-        expectFatalError(expectedMessage: "'operations' must containes 1 and more operations") {
+        do {
             let array : [GraphQLQuery] = []
-            _ = GraphQLBody(operations: array)
+            _ = try GraphQLBody(operations: array)
+        } catch let error as GraphQLResultError {
+            if case let GraphQLResultError.bodyError(_, _, error) = error {
+                XCTAssertEqual(error, "'operations' must contains 1 and more operations")
+            } else {
+                XCTFail("\(error)")
+            }
+        } catch {
+            XCTFail("\(error)")
         }
-        #endif
     }
     
     func testQueryNamesDuplicate() {
-        #if os(macOS)
-        expectFatalError(expectedMessage: "Two or more operations with equal name. Use 'alias' to resolve this problem") {
-            _ = GraphQLBody(operation: self.fields, self.crops, self.crops, self.crops)
+        do {
+            _ = try GraphQLBody(operation: self.fields, self.crops, self.crops, self.crops)
+        } catch let error as GraphQLResultError {
+            if case let GraphQLResultError.bodyError(_, _, error) = error {
+                XCTAssertEqual(error, "Two or more operations with equal name. Use 'alias' to resolve this problem")
+            } else {
+                XCTFail("\(error)")
+            }
+        } catch {
+            XCTFail("\(error)")
         }
-        #endif
     }
     
     func testFragmentsDuplicate() {
-        #if os(macOS)
-        expectFatalError(expectedMessage: "Fragment dublicates. You have two or more fragments with equal name") {
-            _ = GraphQLBody(operation: self.fields, self.crops, self.crops2)
+        do {
+            _ = try GraphQLBody(operation: self.fields, self.crops, self.crops2)
+        } catch let error as GraphQLResultError {
+            if case let GraphQLResultError.bodyError(_, _, error) = error {
+                XCTAssertEqual(error, "Fragment duplicates. You have two or more fragments with equal name")
+            } else {
+                XCTFail("\(error)")
+            }
+        } catch {
+            XCTFail("\(error)")
         }
-        #endif
     }
     
     static var allTests = [
         ("testInit", testInit),
+        ("testInitWithVariables", testInitWithVariables),
         ("testBrokenInit", testBrokenInit),
         ("testFragmentsDuplicate", testFragmentsDuplicate),
     ]
