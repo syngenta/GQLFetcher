@@ -26,21 +26,23 @@ public enum GraphQLResultError: Error, Equatable {
     case customResultError(error: String)
     case differentTypes
     case noOperationForData(operations: [String : GraphQLOperation], data: Any?)
+    case bodyError(operations: [GraphQLOperation], variables: [GraphQLVariable], error: String)
     
     public var code: Int {
         switch self {
         case .unnown: return 0
         case .canceled: return 1
-        case .fetchError(_): return 2
-        case .parsingFailure(_): return 3
-        case .parsingError(_): return 4
-        case .graphQLErrors(_): return 5
-        case .resultError(_): return 6
-        case .resultMappingError(_, _): return 7
-        case .networkerError(_): return 8
-        case .customResultError(_): return 9
+        case .fetchError: return 2
+        case .parsingFailure: return 3
+        case .parsingError: return 4
+        case .graphQLErrors: return 5
+        case .resultError: return 6
+        case .resultMappingError: return 7
+        case .networkerError: return 8
+        case .customResultError: return 9
         case .differentTypes: return 10
-        case .noOperationForData(_, _): return 11
+        case .noOperationForData: return 11
+        case .bodyError: return 12
         }
     }
     
@@ -57,7 +59,10 @@ public enum GraphQLResultError: Error, Equatable {
         case .networkerError(let error): return "networkerError - \(error)"
         case .customResultError(let error): return "customResultError - \(error)"
         case .differentTypes: return "differentTypes"
-        case .noOperationForData(let operations, let data): return "noOperationForData - \(operations) \(String(describing: data))"
+        case .noOperationForData(let operations, let data):
+            return "noOperationForData - \(operations) \(String(describing: data))"
+        case .bodyError(operations: let operations, let variables, let error):
+            return "bodyError - \(operations), variables - \(variables), \(error)"
         }
     }
     

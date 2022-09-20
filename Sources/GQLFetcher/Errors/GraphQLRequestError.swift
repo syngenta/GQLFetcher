@@ -9,9 +9,9 @@ import Foundation
 
 public struct GraphQLRequestError: Error {
     public let error: GraphQLResultError
-    public let body: GraphQLBody
+    public let body: GraphQLBody?
     
-    init(error: Error, body: GraphQLBody) {
+    init(error: Error, body: GraphQLBody? = nil) {
         self.error = error as! GraphQLResultError
         self.body = body
     }

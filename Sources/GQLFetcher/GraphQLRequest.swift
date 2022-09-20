@@ -12,9 +12,7 @@ import GQLSchema
 /// - Class for describing and getting GraphQL data
 /// - Use generic **Result**, protocol of **GraphQLResult**
 public class GraphQLRequest<Result: GraphQLResult> {
-    
-    public let body: GraphQLBody
-    
+
     private var isQueue = false
     private lazy var queue: OperationQueue = {
         let q = OperationQueue()
@@ -24,34 +22,50 @@ public class GraphQLRequest<Result: GraphQLResult> {
         return q
     }()
     private var task: GraphQLTask?
-    
-    /// Dictionary where key - operation *name*, value - **GraphQLOperation** object
-    private var operations: [String : GraphQLOperation]
-    
-    /// Initializer of **GraphQLRequest**
+    private let operations: [GraphQLOperation]
+    private let variables: [GraphQLVariable]
+
+    /// Initialiser of **GraphQLRequest**
     ///
-    /// - Parameter operation: list of operations (generic protocol of **GraphQLOperation**)
-    public init<O: GraphQLOperation>(operations: [O]) {
-        self.body = GraphQLBody(operations: operations)
-        self.operations = Dictionary(uniqueKeysWithValues: operations.map { ($0.name, $0) })
+    /// - Parameter operations: list of operations (protocol of **GraphQLOperation**)
+    /// - Parameter variables: GraphQL variables used for request
+    public init(operations: [GraphQLOperation], variables: [GraphQLVariable] = []) {
+        self.operations = operations
+        self.variables = variables
     }
-    
-    /// Initializer of **GraphQLRequest**
+
+    /// Initialiser of **GraphQLRequest**
+    ///
+    /// - Parameter operations: list of operations (generic protocol of **GraphQLOperation**)
+    /// - Parameter variable: GraphQL variables used for request
+    public convenience init(operations: [GraphQLOperation], variable variables: GraphQLVariable...) {
+        self.init(operations: operations, variables: variables)
+    }
+
+    /// Initialiser of **GraphQLRequest**
     ///
     /// - Parameter operation: operations (generic protocol of **GraphQLOperation**)
-    public convenience init<O: GraphQLOperation>(operation operations: O...) {
-        self.init(operations: operations)
+    /// - Parameter variable: GraphQL variables used for request
+    public convenience init(operation operations: GraphQLOperation..., variable variables: GraphQLVariable...) {
+        self.init(operations: operations, variables: variables)
     }
-    
+
+    /// Initialiser of **GraphQLRequest**
+    ///
+    /// - Parameter operation: operations (generic protocol of **GraphQLOperation**)
+    public convenience init(operation operations: GraphQLOperation...) {
+        self.init(operations: operations, variables: [])
+    }
+
     /// Closure with default **Result** initializer (Can be changed for another **Result** protocols, like **GraphQLAdditionalResult**)
     var result: ([String : GraphQLResponse<Result.Result>], GraphQLContext) throws -> Result = {
         try Result(responses: $0, context: $1)
     }
-    
+
     deinit {
         Logger.deinit(self)
     }
-    
+
     /// Function for canceling operation after running
     ///
     /// - Returns: Returns *true* — if possible to stop operations, and *false* — if not
@@ -84,6 +98,10 @@ public extension GraphQLRequest where Result: GraphQLAdditionalResult {
 
 // MARK: - Performs
 public extension GraphQLRequest {
+
+    func body() throws -> GraphQLBody {
+        try GraphQLBody(operations: self.operations, variables: self.variables)
+    }
     
     ///  Will run performation with closure result
     ///
@@ -94,9 +112,17 @@ public extension GraphQLRequest {
     ///   - failure: Closure with failure result(error struct **GraphQLRequestError**)
     func perform(context: GraphQLContext, queue: OperationQueue? = nil, success: @escaping (Result) -> Void, failure: @escaping (GraphQLRequestError) -> Void) {
         let queue = queue ?? self.queue
+
+        let body: GraphQLBody
+        do {
+            body = try self.body()
+        } catch {
+            failure(GraphQLRequestError(error: error))
+            return
+        }
         
         let fetch = Promise<GraphQLJSON> { resolver in
-            let operation = GraphQLTask(body: self.body, context: context, resolver: resolver)
+            let operation = GraphQLTask(body: body, context: context, resolver: resolver)
             self.task = operation
             queue.addOperation(operation)
         }
@@ -110,8 +136,9 @@ public extension GraphQLRequest {
             guard let _data = data["data"] as? GraphQLJSON else {
                 throw GraphQLResultError.resultError(data: data)
             }
-            
-            let responses = try GraphQLResponse<Result.Result>.create(operations: self.operations, data: _data)
+
+            let operations = Dictionary(uniqueKeysWithValues: self.operations.map { ($0.name, $0) })
+            let responses = try GraphQLResponse<Result.Result>.create(operations: operations, data: _data)
             do {
                 return try Promise.value(self.result(responses, context))
             } catch let error {
@@ -120,7 +147,7 @@ public extension GraphQLRequest {
         }
         .done { success($0) }
         .catch {
-            failure(GraphQLRequestError(error: $0, body: self.body))
+            failure(GraphQLRequestError(error: $0, body: body))
         }
     }
     
