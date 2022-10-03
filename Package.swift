@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-         .package(url: "https://github.com/Lumyk/GQLSchema.git", from: "1.1.2"),
+         .package(url: "https://github.com/Lumyk/GQLSchema.git", from: "1.1.3"),
          .package(url: "https://github.com/mxcl/PromiseKit.git", from: "6.18.1"),
     ],
     targets: [

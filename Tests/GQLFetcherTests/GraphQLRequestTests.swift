@@ -292,6 +292,19 @@ class GraphQLRequestTests: XCTestCase {
         
         waitForExpectations(timeout: 30, handler: nil)
     }
+
+    func testMultipartRequest() {
+        do {
+            let networker = GraphQLHTTPNetworker()
+            let file = File(binary: Data(), contentType: "image/png", filename: "file")
+            let variable = GraphQLVariable(type: "Upload", name: "files", value: file)
+            let body = try GraphQLBody(operations: [self.query], variables: [variable], boundary: "38F41F3F5ACA")
+            let request = networker.request(to: URL(string: "http://localhost")!, for: body)
+            XCTAssertEqual("\(request.allHTTPHeaderFields!["Content-Type"]!)", "multipart/form-data; boundary=38F41F3F5ACA")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
     
     static var allTests = [
         ("testInit", testInit),
@@ -302,5 +315,6 @@ class GraphQLRequestTests: XCTestCase {
         ("testRequestCancel", testRequestCancel),
         ("testRequestCancel2", testRequestCancel2),
         ("testRequestCancel3", testRequestCancel3),
+        ("testMultipartRequest", testMultipartRequest)
     ]
 }

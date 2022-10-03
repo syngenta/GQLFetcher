@@ -23,6 +23,13 @@ fileprivate class TestFragment: GraphQLFragment {
     }
 }
 
+struct File: GraphQLFileType {
+    let binary: Data
+    let contentType: String
+    let filename: String
+    var _graphQLFormat: String { "null" }
+}
+
 class GraphQLBodyTests: XCTestCase {
 
     private let cropsFragment = TestFragment { (field) in
@@ -53,6 +60,7 @@ class GraphQLBodyTests: XCTestCase {
             let body = try GraphQLBody(operation: self.fields, self.crops, variables: [var1, var2])
 
             let string = #"{ "query" : "fragment TestTypeFragment on TestType{ id name crop }  query($some_int: Int,$some_string: String) { getFields { id name } getCrops { ...TestTypeFragment }  }", "variables": {"some_int": 10,"some_string": "20"} }"#
+    
             XCTAssertEqual(body.description, string)
         } catch {
             XCTFail("\(error)")
@@ -101,11 +109,41 @@ class GraphQLBodyTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
+
+    func testArrayOfFiles() {
+        do {
+            let file1 = File(binary: Data(), contentType: "image/png", filename: "file1")
+            let file2 = File(binary: Data(), contentType: "image/png", filename: "file2")
+            let variable = GraphQLVariable(type: "Upload", name: "files", value: [file1, file2])
+            _ = try GraphQLBody(operation: self.fields, variables: [variable])
+        } catch let error as GraphQLResultError {
+            if case let GraphQLResultError.bodyError(_, _, error) = error {
+                XCTAssertEqual(error, "Library not support array of *GraphQLFileType*. You can upload by one file only")
+            } else {
+                XCTFail("\(error)")
+            }
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testFileVariables() {
+        do {
+            let file = File(binary: Data(), contentType: "image/png", filename: "file")
+            let variable = GraphQLVariable(type: "Upload", name: "files", value: file)
+            let body = try GraphQLBody(operations: [self.fields], variables: [variable], boundary: "38F41F3F5ACA")
+            XCTAssertEqual(String(data: body.data, encoding: .utf8), "--38F41F3F5ACA\r\nContent-Disposition: form-data; name=\"operations\"\r\n\r\n{ \"query\" : \" query($files: Upload) { getFields { id name }  }\", \"variables\": {\"files\": null} }\r\n--38F41F3F5ACA\r\nContent-Disposition: form-data; name=\"map\"\r\n\r\n{ \"0\": [\"variables.files\"] }\r\n--38F41F3F5ACA\r\nContent-Disposition: form-data; name=\"0\"; filename=\"file\"\r\nContent-Type: image/png\r\n\r\n\r\n--38F41F3F5ACA--\r\n")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
     
     static var allTests = [
         ("testInit", testInit),
         ("testInitWithVariables", testInitWithVariables),
         ("testBrokenInit", testBrokenInit),
         ("testFragmentsDuplicate", testFragmentsDuplicate),
+        ("testArrayOfFiles", testArrayOfFiles),
+        ("testFileVariables", testFileVariables)
     ]
 }
