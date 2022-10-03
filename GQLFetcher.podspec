@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
   s.source_files  = "Sources/**/*"
 
   s.dependency "PromiseKit", "6.18.1"
-  s.dependency "GQLSchema", "1.1.2"
+  s.dependency "GQLSchema", "1.1.3"
 
 
 end

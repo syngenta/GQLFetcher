@@ -57,9 +57,14 @@ public class GraphQLHTTPNetworker: GraphQLNetworker {
         request.httpShouldHandleCookies = false
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.httpBody = body.data
-        
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let boundary = body.boundary { // if boundary exist — multipart
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        } else {
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         
         return request
     }
