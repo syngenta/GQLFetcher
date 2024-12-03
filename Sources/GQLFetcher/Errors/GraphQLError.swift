@@ -35,7 +35,17 @@ public struct GraphQLError: CustomStringConvertible {
     public let locations: [Location]?
     
     init(data: GraphQLJSON) {
-        self.message = (data["message"] as? String) ?? "Uknown error"
+        if let message = data["message"] as? String {
+            self.message = message
+        } else {
+            if  let messageData = data["message"], let jsonData = try? JSONSerialization.data(withJSONObject: messageData as Any, options: []),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                self.message = jsonString
+            } else {
+                self.message = "Unknown error"
+            }
+        }
+
         self.fields  = data["fields"]  as? [String]
         
         if let locations = data["locations"] as? [GraphQLJSON] {
