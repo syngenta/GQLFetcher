@@ -39,7 +39,7 @@ class GraphQLErrorTests: XCTestCase {
     
     func testUnnownError() {
         let error = GraphQLError(data: [:])
-        XCTAssertEqual(error.message, "Uknown error")
+        XCTAssertEqual(error.message, "Unknown error")
         XCTAssertNil(error.fields)
         XCTAssertNil(error.locations)
     }
@@ -59,7 +59,23 @@ class GraphQLErrorTests: XCTestCase {
         XCTAssertEqual(error.locations?.first?.line, 2)
         XCTAssertEqual(error.locations?.first?.column, 56)
     }
-    
+
+    func testIncompatibkeErrorMessage() {
+        let _error : GraphQLJSON = [
+            "message": ["Errors": ["invalidargument": -333]],
+            "line": 2,
+            "column": 56,
+            "fields": [
+                10
+            ]
+        ]
+        let error = GraphQLError(data: _error)
+        XCTAssertEqual(error.message, "{\"Errors\":{\"invalidargument\":-333}}")
+        XCTAssertNil(error.fields)
+        XCTAssertEqual(error.locations?.first?.line, 2)
+        XCTAssertEqual(error.locations?.first?.column, 56)
+    }
+
     static var allTests = [
         ("testInit", testInit),
         ("testUnnownError", testUnnownError),
