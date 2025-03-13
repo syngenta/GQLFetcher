@@ -19,6 +19,13 @@ public struct GraphQLRequestError: Error {
     public var isCancelled: Bool {
         return self.error == GraphQLResultError.canceled
     }
+
+    public var isUnauthorized: Bool {
+        if case GraphQLResultError.unauthorizedError(let error) = error {
+            return true
+        }
+        return false
+    }
 }
 
 public extension Error {
