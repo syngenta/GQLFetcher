@@ -27,7 +27,8 @@ public enum GraphQLResultError: Error, Equatable {
     case differentTypes
     case noOperationForData(operations: [String : GraphQLOperation], data: Any?)
     case bodyError(operations: [GraphQLOperation], variables: [GraphQLVariable], error: String)
-    
+    case unauthorizedError(error: GraphQLError)
+
     public var code: Int {
         switch self {
         case .unnown: return 0
@@ -43,6 +44,7 @@ public enum GraphQLResultError: Error, Equatable {
         case .differentTypes: return 10
         case .noOperationForData: return 11
         case .bodyError: return 12
+        case .unauthorizedError: return 13
         }
     }
     
@@ -63,6 +65,7 @@ public enum GraphQLResultError: Error, Equatable {
             return "noOperationForData - \(operations) \(String(describing: data))"
         case .bodyError(operations: let operations, let variables, let error):
             return "bodyError - \(operations), variables - \(variables), \(error)"
+        case .unauthorizedError(let error): return "unauthorizedError - \(error)"
         }
     }
     

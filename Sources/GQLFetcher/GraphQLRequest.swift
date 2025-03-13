@@ -130,7 +130,11 @@ public extension GraphQLRequest {
         fetch.then { data -> Promise<Result> in
             if let errors = data["errors"] as? [GraphQLJSON] {
                 let errors = errors.compactMap { GraphQLError(data: $0) }
-                throw GraphQLResultError.graphQLErrors(errors: errors)
+                if let unauthorizedError = errors.first(where: { $0.message == "Not authenticated" }) {
+                    throw GraphQLResultError.unauthorizedError(error: unauthorizedError)
+                } else {
+                    throw GraphQLResultError.graphQLErrors(errors: errors)
+                }
             }
             
             guard let _data = data["data"] as? GraphQLJSON else {
