@@ -57,6 +57,10 @@ public class GraphQLHTTPNetworker: GraphQLNetworker {
         request.httpShouldHandleCookies = false
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.httpBody = body.data
+        if let parameters = body.parameters {
+            request.allHTTPHeaderFields = parameters.httpHeaders
+            request.timeoutInterval = parameters.timeoutInterval
+        }
 
         if let boundary = body.boundary { // if boundary exist — multipart
             request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -69,5 +73,3 @@ public class GraphQLHTTPNetworker: GraphQLNetworker {
         return request
     }
 }
-
-

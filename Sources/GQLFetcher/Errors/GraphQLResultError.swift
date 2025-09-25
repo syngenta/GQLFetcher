@@ -28,6 +28,7 @@ public enum GraphQLResultError: Error, Equatable {
     case noOperationForData(operations: [String : GraphQLOperation], data: Any?)
     case bodyError(operations: [GraphQLOperation], variables: [GraphQLVariable], error: String)
     case unauthorizedError(error: GraphQLError)
+    case badInternetConnection(error: URLError)
 
     public var code: Int {
         switch self {
@@ -45,6 +46,7 @@ public enum GraphQLResultError: Error, Equatable {
         case .noOperationForData: return 11
         case .bodyError: return 12
         case .unauthorizedError: return 13
+        case .badInternetConnection: return 14
         }
     }
     
@@ -66,6 +68,7 @@ public enum GraphQLResultError: Error, Equatable {
         case .bodyError(operations: let operations, let variables, let error):
             return "bodyError - \(operations), variables - \(variables), \(error)"
         case .unauthorizedError(let error): return "unauthorizedError - \(error)"
+        case .badInternetConnection(let error): return "badInternetConnection - \(error)"
         }
     }
     
@@ -77,5 +80,11 @@ public enum GraphQLResultError: Error, Equatable {
 public extension Error {
     var resultError: GraphQLResultError? {
         return self as? GraphQLResultError
+    }
+
+    var isBadInternetConnection: Bool {
+        guard let resultError else { return false }
+        guard case .badInternetConnection = resultError else { return false }
+        return true
     }
 }
