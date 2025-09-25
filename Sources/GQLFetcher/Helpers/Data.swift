@@ -25,7 +25,7 @@ internal extension Data {
         try append("\r\n")
     }
 
-    mutating func appendPart(file: GraphQLFileType, name: String, boundary: String) throws {
+    mutating func appendPart(file: GraphQLFile, name: String, boundary: String) throws {
         try append("--\(boundary)\r\n")
         try append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(file.filename)\"\r\n")
         try append("Content-Type: \(file.contentType)\r\n")

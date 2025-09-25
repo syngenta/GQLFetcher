@@ -46,15 +46,20 @@ class GraphQLTask: Operation {
                     if let error = error {
                         if error.isCancelled {
                             resolver.reject(GraphQLResultError.canceled)
+                        } else if let error = error as? URLError {
+                            switch error.code {
+                            case .notConnectedToInternet, .networkConnectionLost, .timedOut:
+                                resolver.reject(GraphQLResultError.badInternetConnection(error: error))
+                            default:
+                                resolver.reject(GraphQLResultError.fetchError(error: error))
+                            }
                         } else {
-                            let _error = GraphQLResultError.fetchError(error: error)
-                            resolver.reject(_error)
+                            resolver.reject(GraphQLResultError.fetchError(error: error))
                         }
                     } else if let data = data {
                         resolver.fulfill(data)
                     } else {
-                        let _error = GraphQLResultError.unnown
-                        resolver.reject(_error)
+                        resolver.reject(GraphQLResultError.unnown)
                     }
                 })
                 task(_task)

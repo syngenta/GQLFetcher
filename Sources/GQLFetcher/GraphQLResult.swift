@@ -11,24 +11,27 @@ public struct GraphQLResponse<T> {
     public let operation: GraphQLOperation
     public let data: T
     
-    public init (operation: GraphQLOperation, data: T) {
+    public init (operation: GraphQLOperation, data: T, body: GraphQLBody) {
         self.operation = operation
         self.data = data
     }
     
-    init(operation: GraphQLOperation, data: Any?) throws {
+    init(operation: GraphQLOperation, data: Any?, body: GraphQLBody) throws {
         guard let data = data as? T else {
             throw GraphQLResultError.differentTypes
         }
-        self.init(operation: operation, data: data)
+        self.init(operation: operation, data: data, body: body)
     }
     
-    static func create(operations: [String : GraphQLOperation], data: GraphQLJSON) throws -> [String : GraphQLResponse<T>] {
+    static func create(operations: [String: GraphQLOperation],
+                       data: GraphQLJSON,
+                       body: GraphQLBody) throws -> [String : GraphQLResponse<T>] {
+
         return try operations.mapValues { (operation) -> GraphQLResponse<T> in
             guard let _data = data[operation.name] else {
                 throw GraphQLResultError.noOperationForData(operations: operations, data: data)
             }
-            return try GraphQLResponse<T>(operation: operation, data: _data)
+            return try GraphQLResponse<T>(operation: operation, data: _data, body: body)
         }
     }
 }

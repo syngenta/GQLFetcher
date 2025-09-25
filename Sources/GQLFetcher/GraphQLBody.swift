@@ -12,7 +12,8 @@ import GQLSchema
 public struct GraphQLBody: CustomStringConvertible {
 
     let body: String
-    let data: Data
+    public let data: Data
+    public let parameters: GraphQLRequestParameters?
     public let boundary: String? // boundary exist only for multipart request
     public var description: String { self.body }
 
@@ -35,9 +36,11 @@ public struct GraphQLBody: CustomStringConvertible {
     /// - Parameters:
     ///   - operations: list of **GraphQLOperation** from **GQLSchema** module, operation can be object of **GraphQLQuery** or **GraphQLMutation**
     ///   - variables: list of GraphQL variables that be in request body and  all this variables should be used in operations
+    ///   - parameters: additional parameters for request, by default *nil*
     ///   - boundary: boundary for multipart request, by default *UUID().uuidString*
     init(operations: [GraphQLOperation],
          variables: [GraphQLVariable] = [],
+         parameters: GraphQLRequestParameters? = nil,
          boundary: String = UUID().uuidString) throws {
 
         guard let type = operations.first?.type else {
@@ -66,14 +69,6 @@ public struct GraphQLBody: CustomStringConvertible {
             )
         }
 
-        guard !variables.contains(where: { $0.value is [GraphQLFileType] }) else {
-            throw GraphQLResultError.bodyError(
-                operations: operations,
-                variables: variables,
-                error: "Library not support array of *GraphQLFileType*. You can upload by one file only"
-            )
-        }
-
         let declarations = variables.isEmpty ? "" : "(\(variables.map { $0.declaration }.joined(separator: ",")))"
         let fragments = operations.compactMap { $0.fragmentQuery?.body }.joined(separator: " ")
         let operation = operations.reduce("", { $0 + $1.body + " " })
@@ -96,7 +91,7 @@ public struct GraphQLBody: CustomStringConvertible {
         let variablesBody = "{" + variables.map { $0.bodyValue }.joined(separator: ",") + "}"
         let body = #"{ "query" : \#(query), "variables": \#(variablesBody) }"#
 
-        let files = variables.filter { $0.value is GraphQLFileType }
+        let files = variables.filter(\.value.isFile)
         if !files.isEmpty {
             do {
                 var data = Data()
@@ -109,7 +104,7 @@ public struct GraphQLBody: CustomStringConvertible {
                 )
 
                 try files.enumerated().forEach {
-                    guard let file = $0.element.value as? GraphQLFileType else { return }
+                    guard case .file(let file) = $0.element.value else { return }
                     try data.appendPart(
                         file: file,
                         name: "\($0.offset)",
@@ -120,6 +115,7 @@ public struct GraphQLBody: CustomStringConvertible {
 
                 self.body = body
                 self.data = data
+                self.parameters = parameters
                 self.boundary = boundary
             } catch {
                 throw GraphQLResultError.bodyError(
@@ -139,6 +135,7 @@ public struct GraphQLBody: CustomStringConvertible {
 
             self.body = body
             self.data = data
+            self.parameters = parameters
             self.boundary = nil // should be nil for not multipart request
         }
     }
